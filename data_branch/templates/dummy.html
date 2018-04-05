@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+
+<script>
+  data_url = "{{ data_url }}";
+  console.log(data_url);
+  chart_type = "{{ chart_type }}";
+  chart_description = "{{ chart_description }}";
+  chart_name = "{{ chart_name }}";
+
+  function getInitialChartData(url) {
+    let result;
+    try {
+      result = $.ajax({
+        url: url,
+        type: "GET",
+      });
+      return result
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  a = getInitialChartData(data_url + "?format=json");
+  a.then(function (data) {
+    console.log(data);
+    myCurrentChartData = data;
+    $.getScript(`/static/js/chartTypes/${chart_type}.js`).done(function (script, textStatus) {
+      console.log("finished loading and running test.js. with a status of " + textStatus);
+      eval(chart_type)(myCurrentChartData)
+    });
+  });
+
+  $('#infoModal').find('p').text(chart_description);
+  $('#infoModal').find('h5').text(chart_name);
+  $('.myInfoTag').text(chart_name);
+  $("#csvDownload").attr("href", data_url + "?format=csv");
+  $("#jsonDownload").attr("href", data_url + "?format=json");
+  $("#xmlDownload").attr("href", data_url + "?format=xml")
+</script>
+
+</body>
+</html>

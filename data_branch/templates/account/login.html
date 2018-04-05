@@ -1,0 +1,54 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+{% load account socialaccount %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{% trans "Sign In" %}{% endblock %}
+
+{% block inner %}
+
+  <h5 class="mb-7">{% trans "Sign into your account" %}</h5>
+
+  <form class="login" method="POST" action="{% url 'account_login' %}">
+    {% if form.errors %}
+      {% for error in form.non_field_errors %}
+        <div class="alert alert-error">
+          <span><b> {{ error }} </b></span>
+        </div>
+      {% endfor %}
+    {% endif %}
+    {% csrf_token %}
+    {{ form.login|as_crispy_field }}
+    {{ form.password|as_crispy_field }}
+    {% if redirect_field_value %}
+      <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+    {% endif %}
+    <div class="form-group flexbox py-3">
+      <div class="custom-control custom-checkbox">
+        <input type="checkbox" class="custom-control-input" checked="">
+        <label class="custom-control-label">Remember me</label>
+      </div>
+
+      <a class="button secondaryAction" href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
+    </div>
+    <button class="btn btn-block btn-primary" type="submit">{% trans "Sign In" %}</button>
+  </form>
+  <div class="divider">Or Login With</div>
+
+  {% get_providers as socialaccount_providers %}
+
+  {% if socialaccount_providers %}
+    <div class="text-center">
+      {% for provider in socialaccount_providers %}
+        <a class="btn btn-circle btn-sm btn-{{ provider.id }} mr-2"
+           href="{% provider_login_url provider.id process='login' %}"><i class="fa fa-{{ provider.id }}"></i></a>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <hr class="w-30">
+
+  <p class="text-center text-muted small-2">{% blocktrans %}Don't have an account?
+    <a href="{{ signup_url }}"> Register here</a>{% endblocktrans %}</p>
+
+{% endblock %}

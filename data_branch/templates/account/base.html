@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{% block head_title %}{% endblock head_title %}{% endblock title %}
+
+{% block logolink %}<a class="navbar-brand mr-0" href="/" style="transition: 2s">{% endblock logolink %}
+{% block navlinks %}
+  <a class="nav-link" href="/#explore">EXPLORE</a>
+  <a class="nav-link" href="/#about">ABOUT</a>
+  <a class="nav-link" href="/#contact">CONTACT</a>
+{% endblock navlinks %}
+
+{% block content %}
+  <div class="section layout-centered myAuthSection" style="background-color: lightsteelblue">
+    <main class="main-content">
+      <div class="bg-white rounded shadow-7 w-400 mw-100 p-6 myAuthWhiteBox">
+        {% block inner %}{% endblock inner %}
+      </div>
+    </main>
+  </div>
+{% endblock content %}

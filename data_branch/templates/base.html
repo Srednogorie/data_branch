@@ -1,0 +1,422 @@
+{% load static i18n %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <meta name="description" content="Data browsing and visualizations">
+  <meta name="author" content="DataBranch">
+  <meta name="keywords" content="">
+
+  <title>{% block title %}Data Branch{% endblock title %}</title>
+
+  {#  Pace JS Loader  #}
+  <script>
+    paceOptions = {
+      restartOnPushState: false,
+      restartOnRequestAfter: 50
+    };
+  </script>
+  <script src="{% static 'js/pace.min.js' %}" type="text/javascript"></script>
+  <link href="{% static 'css/pace-theme-center-simple.css' %}" rel="stylesheet"/>
+
+  <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+  <!--[if lt IE 9]>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+  <!--Lodash -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.5/lodash.min.js"></script>
+  <script>
+    _u = _.noConflict();
+  </script>
+  <script src="{% static 'js/jquery-3.3.1.js' %}" type="text/javascript"></script>
+
+
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <style type="text/css">
+    /* 13. Basic Styling with CSS */
+
+    /* Style the lines by removing the fill and applying a stroke */
+    .line {
+      fill: none;
+      stroke: #ffab00;
+      stroke-width: 3;
+    }
+
+    /* Style the dots by assigning a fill and stroke */
+    .dot {
+      fill: #ffab00;
+      stroke: #fff;
+    }
+
+  </style>
+
+
+
+  {% block css %}
+
+    <!-- Latest compiled and minified Bootstrap 4 beta CSS -->
+
+    <!-- Your stuff: Third-party CSS libraries go here -->
+
+    <!-- Styles -->
+    <link href="{% static 'css/page.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+    <!-- Favicons -->
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+    <link rel="icon" href="{% static 'images/favicon.ico' %}">
+
+    <!-- This file stores project-specific CSS -->
+    {#    <link href="{% static 'css/project.css' %}" rel="stylesheet">#}
+
+
+  {% endblock css %}
+
+  <!--Feather Icons -->
+  <script src="{% static 'js/feather.js' %}"></script>
+
+  <!--AnyChart-->
+  <script src="https://cdn.anychart.com/js/7.13.0/anychart-bundle.min.js"></script>
+  <script src="http://cdn.anychart.com/js/latest/data-adapter.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.anychart.com/css/7.13.0/anychart-ui.min.css"/>
+
+  <!--Highcharts -->
+  <script src="https://code.highcharts.com/stock/highstock.js"></script>
+  <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+
+
+</head>
+
+<body id="top">
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light navbar-stick-dark" data-navbar="sticky">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12 col-lg-1 mx-auto d-flex align-items-center">
+        <button class="navbar-toggler" type="button">&#9776;</button>
+        {% block logolink %}<a class="navbar-brand mr-0" href="#top" style="transition: 2s">{% endblock logolink %}
+        <img class="mylogo logo-dark" src="{% static 'images/logo-light.png' %}" alt="logo">
+        <img class="mylogo logo-light" src="{% static 'images/logo-dark.png' %}" alt="logo">
+        </a>
+      </div>
+
+      <section class="col-lg-11 navbar-mobile">
+        <nav class="nav nav-navbar mr-auto">
+          {% block navlinks %}
+            <a class="nav-link" href="#explore">EXPLORE</a>
+            <a class="nav-link" href="#about">ABOUT</a>
+            <a class="nav-link" href="#contact">CONTACT</a>
+          {% endblock navlinks %}
+        </nav>
+
+        <nav class="mylogbuttonNav nav nav-navbar ml-auto">
+          {% if request.user.is_authenticated %}
+            {# URL provided by django-allauth/account/urls.py #}
+            <a class="mylogbutton nav-link"
+               href="{% url 'users:detail' request.user.username %}">{% trans "Profile" %}</a>
+            {# URL provided by django-allauth/account/urls.py #}
+            <a class="mylogbutton nav-link" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
+          {% else %}
+            {# URL provided by django-allauth/account/urls.py #}
+            <a id="sign-up-link" class="mylogbutton nav-link" href="{% url 'account_login' %}">{% trans "Sign in" %}</a>
+            {# URL provided by django-allauth/account/urls.py #}
+            <a id="log-in-link" class="mylogbutton nav-link" href="{% url 'account_signup' %}">{% trans "Sign up" %}</a>
+          {% endif %}
+        </nav>
+
+      </section>
+
+    </div>
+  </div>
+</nav>
+<!-- /.navbar -->
+
+
+
+{% block content %}
+  {#  {% if messages %}#}
+  {#    {% for message in messages %}#}
+  {#      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}</div>#}
+  {#    {% endfor %}#}
+  {#  {% endif %}#}
+
+  <!-- Header -->
+  <header class="header text-white h-fullscreen pb-0 overflow-hidden"
+          style="background-image: url({% static 'images/16.png' %}); background-color: #262a37;">
+    <div class="overlay opacity-95"
+         style="background-image: linear-gradient(to bottom, #09203f 0%, #537895 100%);"></div>
+    <div class="container text-center">
+      <div class="row align-items-center h-100">
+
+        <div class="col-md-8 mx-auto">
+          <h1>Data when you need productivity results</h1>
+          <p class="lead mt-4 mb-7">Explore data. Fundamentals and visualisations - this is the place to go. </p>
+          <a class="btn btn-xl btn-round btn-primary px-8" href="#explore" id="mySubmitAndHeroMediaQuryButton">
+            Explore Data</a>
+        </div>
+
+      </div>
+    </div>
+  </header>
+  <!-- /.header -->
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!--
+    |‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒
+    | Explore
+    |‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒
+    !-->
+    <section class="section bg-gray h-fullscreen overflow-hidden" id="explore">
+      <div class="container-fluid">
+        <div class="row text-center" id="searchMenus">
+
+          <div class="dropdown col-md-3 col-6">
+            <select class="mydropdown btn btn-secondary dropdown-toggle"
+                    id="FormSelectCategory" title="Data Category" name="dummy">
+              <option value="" selected disabled hidden>Data Category</option>
+              {% for catry in categories %}
+                <option value="{{ catry.id }}">{{ catry.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="dropdown col-md-3 col-6">
+            <select class="not-allowed mydropdown btn btn-secondary dropdown-toggle"
+                    id="FormSelectCountry" title="Country" name="dummy2" disabled>
+              <option value="" selected disabled hidden>Country</option>
+            </select>
+          </div>
+          <div class="dropdown col-md-3 col-6">
+            <select class="mydropdown btn btn-secondary dropdown-toggle"
+                    id="FormSelectSeries" title="Series" name="dummy3" disabled>
+              <option value="" selected disabled hidden>Series</option>
+            </select>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="row">
+              <div class="refreshButton myDataLink col-4">
+                <a href='#' name="searchingFormDropdowns" title="Look Up"
+                   onclick="submitRefreshButton(event)"><i data-feather="arrow-right-circle"
+                                                           class="refreshButtonStyle"
+                                                           data-toggle="modal"
+                                                           data-target="#selectWarningModal"></i></a>
+              </div>
+              <!-- Modal -->
+              <div class="modal fade" id="selectWarningModal" tabindex="-1" role="dialog"
+                   aria-labelledby="exampleModalLabel"
+                   aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel">Be Specific</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <p>Please select all three option filters available!</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="downloadButton myDataLink col-4">
+                <a href="#" title="Download The Chart Data" id="dropdownMenuButton" data-toggle="dropdown">
+                  <i data-feather="download-cloud" class="downloadButtonStyle"></i></a>
+                <div class="downloadDropdown-menu dropdown-menu" aria-labelledby="dropdownMenuButton">
+                  <a class="dropdown-item" href="#" id="csvDownload">CSV</a>
+                  <a class="dropdown-item" href="#" id="jsonDownload" target="_blank">JSON</a>
+                  <a class="dropdown-item" href="#" id="xmlDownload" target="_blank">XML</a>
+                </div>
+              </div>
+
+              <div class="infoButton myDataLink col-4">
+                <a href="#" title="Series Info"><i data-feather="message-square" class="infoButtonStyle"
+                                                   data-toggle="modal" data-target="#infoModal"></i></a>
+              </div>
+              <!-- Modal -->
+              <div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                   aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel">Indicator Name</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <p></p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <p class="myInfoTag"></p>
+        </div>
+        <div class="row" id="chartContainer">
+
+
+        </div>
+      </div>
+    </section>
+
+
+    <!--
+    |‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒
+    | About
+    |‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒
+    !-->
+    <section style="background-color: #B1C7DD; min-height: 100vh !important;"
+             class="section overflow-hidden h-fullscreen"
+             id="about"
+    >
+      <div class="container-fluid d-flex">
+        <div class="row gap-y align-items-center" id="myAboutMediaQueryDiv">
+
+          <div class="col-md-5 text-center">
+            <img class="border shadow-7" src="{% static 'images/one.jpg' %}" alt="Visualization Graphic"
+                 data-aos="fade-left" style="box-shadow: 0px 0px 10px" id="myImage1">
+          </div>
+
+
+          <div class="col-md-7 order-md-first">
+            <h3>Data Sets And Visualizations</h3>
+            <p>We collect and proceed data from virtually any source making it easily accessible and ready for
+              visualization.</p>
+            <p>We use Python, JavaScript, DRF, Scrapy, Selenium, Jenkins, Pandas ect.</p>
+            <h3>Business, Data Journalism, Science</h3>
+            <p>We can go with you through the entire process of data harvesting and visualization.</p>
+            <p>We use AnyChart, D3, Bokeh ect.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!--
+    |‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒
+    | Contact
+    |‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒‒
+    !-->
+    <section class="section bg-gray overflow-hidden h-fullscreen" id="contact" style="background-color: #DBBE9D">
+      <div class="container-fluid">
+        <div class="row gap-y align-items-center">
+          <form class="myContactForm w-400" method="POST" data-aos="fade-right" data-parsley-validate>
+            {% csrf_token %}
+            {{ form.email|as_crispy_field }}
+            {{ form.subject|as_crispy_field }}
+            {{ form.message|as_crispy_field }}
+            <div id="results"></div> <!-- errors go here -->
+            <div class="form-actions">
+              <button class="btn btn-block btn-primary" type="submit" style="box-shadow: 1px 2px 5px #888888"
+                      id="mySubmitAndHeroMediaQuryButton">Send
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <!-- Footer -->
+  <footer class="myFooter footer text-white bt-0 py-7"
+          style="background-image: linear-gradient(135deg, #4481eb 0%, #04befe 100%);">
+    <div class="container">
+      <div class="row align-items-center">
+
+        <div class="col-md-12">
+          <div class="nav nav-bold nav-uppercase justify-content-center">
+            <a class="nav-link" href="#explore">EXPLORE</a>
+            <a class="nav-link" href="#about">ABOUT</a>
+            <a class="nav-link" href="#contact">CONTACT</a>
+          </div>
+        </div>
+
+        <!--<div class="col-md-6 text-center text-md-left mt-5 mt-md-0">-->
+        <!--<div class="social social-bg-dark">-->
+        <!--<a class="social-facebook" href="#"><i class="fa fa-facebook"></i></a>-->
+        <!--<a class="social-twitter" href="#"><i class="fa fa-twitter"></i></a>-->
+        <!--<a class="social-instagram" href="#"><i class="fa fa-instagram"></i></a>-->
+        <!--<a class="social-youtube" href="#"><i class="fa fa-youtube"></i></a>-->
+        <!--<a class="social-dribbble" href="#"><i class="fa fa-dribbble"></i></a>-->
+        <!--</div>-->
+        <!--</div>-->
+
+        <div class="col-12 text-center">
+          {#          <br>#}
+          <small>© DataBranch 2018, All rights reserved.</small>
+        </div>
+
+      </div>
+    </div>
+  </footer><!-- /.footer -->
+{% endblock content %}
+
+{% block modal %}{% endblock modal %}
+
+<!-- Le javascript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+{% block javascript %}
+
+  <!-- Required by Bootstrap v4 beta -->
+
+  <!-- Your stuff: Third-party javascript libraries go here -->
+  <!-- Scripts -->
+  <script src="{% static 'js/page.js' %}"></script>
+  <script src="{% static 'js/script.js' %}"></script>
+  <script src="{% static 'js/modernizr-custom.js' %}"></script>
+  <script src="{% static 'js/parsley.min.js' %}"></script>
+  <script>
+    $('body').scrollspy({
+      target: '.navbar',
+      offset: 250
+    });
+
+    feather.replace({class: 'infoIcon'});
+
+    $('#searchMenus').find('select').mouseout(function () {
+      this.blur();
+      console.log('Handler for .mouseout() called.');
+    });
+
+    $(window).on('activate.bs.scrollspy', function (e) {
+      history.replaceState({}, "", $('.nav-link.active').attr("href"));
+    });
+
+    $(window).scroll(function () {
+      if (!window.pageYOffset || !document.documentElement.scrollTop) {
+        history.replaceState({}, "", " ");
+      }
+    });
+
+    if (Modernizr.mq('(min-width: 576px)') && Modernizr.mq('(max-width: 767.98px)')) {
+      $('#id_message').attr('rows', 5)
+    } else {
+      $('#id_message').attr('rows', 10)
+    }
+  </script>
+
+  <!-- place project specific Javascript in this file -->
+  <script src="{% static 'js/js.cookie.js' %}" type="text/javascript"></script>
+  <script src="{% static 'js/searching.js' %}" type="text/javascript"></script>
+  <script src="{% static 'js/project.js' %}" type="text/javascript"></script>
+{% endblock javascript %}
+</body>
+</html>
